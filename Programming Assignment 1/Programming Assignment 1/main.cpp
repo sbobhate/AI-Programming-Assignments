@@ -9,6 +9,13 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+/* 
+ * Objectives to accomplish:
+ *  - delineate hand shapes (fist, thumbs up, thumbs down, pointing)
+ *  - gestures (waving one or both hands, swinging, drawing something)
+ *  - create a graphical display that responds to the recognition
+ */
+
 int main(int argc, const char * argv[]) {
     
     // Begin a video capture
@@ -34,6 +41,13 @@ int main(int argc, const char * argv[]) {
             std::cout << "Error: Could not find a frame.\n";
             return -1;
         }
+        
+        /*
+         *
+         * Add code to implement objectives
+         *  - hand gestures: 
+         *
+         */
         
         cv::imshow("Output", frame);
     }
