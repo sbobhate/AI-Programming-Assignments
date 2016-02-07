@@ -6,6 +6,7 @@
 //  Collaborated with Inna
 //  Copyright © 2016 Shantanu Bobhate. All rights reserved.
 //
+//
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
@@ -34,6 +35,9 @@ void myMotionEnergy ( std::vector < cv::Mat > frames, cv::Mat &dst, int threshol
 int findArea (cv::Mat& src);
 // Function to find the centroid of an object
 cv::Point findCenter (int area, cv::Mat& src);
+//Finding projections
+int verticalProjection(cv::Mat& src, cv::Mat& dst);
+int horizontalProjection(cv::Mat& src, cv::Mat& dst);
 
 cv::Mat fgMaskMOG2;
 cv::Ptr<cv::BackgroundSubtractor> pMOG2;
@@ -109,8 +113,8 @@ int main(int argc, const char * argv[]) {
         std::string frameNumberString = ss.str();
         cv::putText(frame, frameNumberString.c_str(), cv::Point(15, 15), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 0, 0));
         // Show the current frame and the fg Mask
-        cv::imshow("Frame", frame);
-        cv::imshow("Mask", fgMaskMOG2);
+//        cv::imshow("Frame", frame);
+//        cv::imshow("Mask", fgMaskMOG2);
         
         /*
          * Compute Area
@@ -134,9 +138,37 @@ int main(int argc, const char * argv[]) {
         myFrameDifferencing(skin_detected_frame, frame2, diff, 128);
         cv::imshow("Diff", diff);
         
+        
+        /*
+         * Detecting Waving
+         */
+        
+        int totalHorizontalPixels;
+        int totalVerticalPixels;
+        bool check;
+        
+        cv::Mat horizontalProj = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1);
+        totalHorizontalPixels = horizontalProjection(diff, horizontalProj);
+        imshow("HorizontalProjection",horizontalProj);
+        cv::Mat verticalProj = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1);
+        totalVerticalPixels = verticalProjection(diff, verticalProj);
+        imshow("VerticalProjection",verticalProj);
+        
+        if (totalHorizontalPixels > 3000000 && totalVerticalPixels > 3000000)
+            check = 1;
+        
+        if (check)
+            cv::putText(frame, "DONE", cv::Point2f(50,230), CV_FONT_HERSHEY_COMPLEX, 2, cv::Scalar(0,225,0), 2, cv::LINE_AA);
+        
         /*
          * Hand Gestures
          */
+        
+        
+        /*
+         * Motion Energy
+         */
+
         
         // Show the images
         cv::imshow("Original", frame);
@@ -249,6 +281,39 @@ int findArea (cv::Mat& src) {
         }
     }
     return area;
+}
+
+int horizontalProjection(cv::Mat& src, cv::Mat& dst) {
+    int count;
+    int total;
+    for (int i = 0; i<WINDOW_HEIGHT; i++) {
+        count = 0;
+        for (int j = 0; j<WINDOW_WIDTH; j++) {
+            if (src.at<uchar>(i,j) == 255) {
+                dst.at<uchar>(i,count) = 255;
+                count++;
+            }
+            total += count;
+        }
+    }
+    
+    return total;
+}
+
+int verticalProjection(cv::Mat& src, cv::Mat& dst) {
+    int count;
+    int total;
+    for (int i = 0; i<WINDOW_WIDTH; i++) {
+        count = 0;
+        for (int j = 0; j<WINDOW_HEIGHT; j++) {
+            if (src.at<uchar>(i,j) == 255) {
+                dst.at<uchar>(count,i) = 255;
+                count++;
+            }
+            total += count;
+        }
+    }
+    return total;
 }
 
 cv::Point findCenter (int area, cv::Mat& src) {

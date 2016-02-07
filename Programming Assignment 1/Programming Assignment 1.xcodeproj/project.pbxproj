@@ -279,6 +279,7 @@
 				C67EF62D1C57B603005C641A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
