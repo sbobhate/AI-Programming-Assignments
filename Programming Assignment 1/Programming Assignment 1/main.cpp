@@ -6,6 +6,7 @@
 //  Collaborated with Inna
 //  Copyright © 2016 Shantanu Bobhate. All rights reserved.
 //
+//
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
@@ -36,15 +37,22 @@ int myMax ( int a, int b, int c );
 int myMin ( int a, int b, int c );
 // Function to find the area of a blob
 int findArea ( cv::Mat& src );
-// Function to find the centroid of an object
 cv::Point findCenter ( int area, cv::Mat& src, cv::Rect loc );
 // Function to set the background of an image
 void setBackground ( cv::Mat& src, int color[] );
 // Function to draw circles in an image
 void drawCircles ( cv::Mat& src, int number );
 
+//Finding projections
+int verticalProjection(cv::Mat& src, cv::Mat& dst);
+int horizontalProjection(cv::Mat& src, cv::Mat& dst);
+
+// Function to find the difference between 2 frames
+void myFrameDifferencing ( cv::Mat& first, cv::Mat& second, cv::Mat& dst, int threshold );
+
 
 int number_of_fingers;
+
 
 
 int main(int argc, const char * argv[]) {
@@ -106,6 +114,7 @@ int main(int argc, const char * argv[]) {
         cv::imshow("Filter", filtered_image);
          */
         
+
     /*
      * Draw Contours on Skin Detected Image
      */
@@ -158,6 +167,7 @@ int main(int argc, const char * argv[]) {
                 cv::line(frame, rect_points[ii], rect_points[(ii + 1) % 4], cv::Scalar(0, 255, 255), 2, 8);
             }
         }
+
         
     /*
      * Find the center of the largest contour
@@ -215,6 +225,44 @@ int main(int argc, const char * argv[]) {
         // Show the output
         cv::imshow("Contours", contour_output);
         
+        /*
+         * Skin Detection
+         */
+        
+
+        cv::Mat frame_test;
+        cap.read(frame_test);
+        cv::Mat frame2 = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1);
+        mySkinDetect(frame_test, frame2);
+        cv::Mat diff = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1);
+        myFrameDifferencing(skin_detected_frame, frame2, diff, 128);
+        cv::imshow("Diff", diff);
+        
+        /*
+         * Detecting Waving
+         */
+        
+        int totalHorizontalPixels;
+        int totalVerticalPixels;
+        bool check;
+        
+        cv::Mat horizontalProj = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1);
+        totalHorizontalPixels = horizontalProjection(diff, horizontalProj);
+        imshow("HorizontalProjection",horizontalProj);
+        cv::Mat verticalProj = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1);
+        totalVerticalPixels = verticalProjection(diff, verticalProj);
+        imshow("VerticalProjection",verticalProj);
+        
+        if (totalHorizontalPixels > 3000000 && totalVerticalPixels > 3000000)
+            check = 1;
+        
+        if (check)
+            cv::putText(frame, "DONE", cv::Point2f(50,230), CV_FONT_HERSHEY_COMPLEX, 2, cv::Scalar(0,225,0), 2, cv::LINE_AA);
+        
+        /*
+         * Hand Gestures
+         */
+
     /*
      * Draw Convexity Defects
      */
@@ -260,6 +308,12 @@ int main(int argc, const char * argv[]) {
             number_of_fingers = finger_count;
         }
         cv::imshow("Output", data);
+        
+        
+        /*
+         * Motion Energy
+         */
+
         
         // Show the images
         cv::imshow("Original", frame);
@@ -333,9 +387,43 @@ int findArea (cv::Mat& src) {
     return area;
 }
 
+int horizontalProjection(cv::Mat& src, cv::Mat& dst) {
+    int count;
+    int total;
+    for (int i = 0; i<WINDOW_HEIGHT; i++) {
+        count = 0;
+        for (int j = 0; j<WINDOW_WIDTH; j++) {
+            if (src.at<uchar>(i,j) == 255) {
+                dst.at<uchar>(i,count) = 255;
+                count++;
+            }
+            total += count;
+        }
+    }
+    
+    return total;
+}
+
+int verticalProjection(cv::Mat& src, cv::Mat& dst) {
+    int count;
+    int total;
+    for (int i = 0; i<WINDOW_WIDTH; i++) {
+        count = 0;
+        for (int j = 0; j<WINDOW_HEIGHT; j++) {
+            if (src.at<uchar>(i,j) == 255) {
+                dst.at<uchar>(count,i) = 255;
+                count++;
+            }
+            total += count;
+        }
+    }
+    return total;
+}
+
 // Function to find the center of an object
 cv::Point findCenter (int area, cv::Mat& src, cv::Rect loc) {
     int rect_x = loc.x, rect_y = loc.y, rect_width = loc.width, rect_height = loc.height;
+
     int sum_x = 0, sum_y = 0;
     for (int ii = rect_y; ii < rect_y + rect_height; ii++)
     {
@@ -372,6 +460,29 @@ void drawCircles (cv::Mat& src, int number) {
         int x = std::rand() % WINDOW_WIDTH;
         int y = std::rand() % WINDOW_HEIGHT;
         cv::circle(src, cv::Point(x, y), 10, cv::Scalar(0, 0, 0), CV_FILLED, 8, 0);
+    }
+}
+
+// Function to find the difference between 2 frames
+void myFrameDifferencing (cv::Mat& first, cv::Mat& second, cv::Mat& dst, int threshold) {
+    // Iterate through each pixel sequentially
+    for (int ii = 0; ii < WINDOW_HEIGHT; ++ii) {
+        uchar* pixel_1 = first.ptr<uchar>(ii);
+        uchar* pixel_2 = second.ptr<uchar>(ii);
+        uchar* pixel_dst = dst.ptr<uchar>(ii);
+        for (int jj = 0; jj < WINDOW_WIDTH; ++jj) {
+            // Compute the intensities
+            int intensity_1 = pixel_1[jj];
+            int intensity_2 = pixel_2[jj];
+            // Compute the absolute difference
+            int intensity_difference = abs(intensity_2 - intensity_1);
+            // Threshold the image to convert it to binary
+            if (intensity_difference > threshold) {
+                pixel_dst[jj] = 255;
+            } else {
+                pixel_dst[jj] = 0;
+            }
+        }
     }
 }
 
