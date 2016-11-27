@@ -43,3 +43,28 @@ For testing the hand gesture recognition and finger counting we looked at how ou
 | --- |:---:| ---:|
 | Y | 10 | 3 |
 | N | 0 | 7 |
+
+**fp rate = 0.3; tp rate = 1**
+
+### Confusion Matrix for Thumbs Down
+
+|| p | n |
+| --- |:---:| ---:|
+| Y | 10 | 3 |
+| N | 0 | 7 |
+
+**fp rate = 0.4; tp rate = 1**
+
+## Results
+
+List your experimental results. Provide examples of input images and output images. If relevant, you may provide images showing any intermediate steps.
+
+## Discussion
+
+As seen in the confusion matrices, out system is good at recognizing gestures. However, it can confuse gestures that look similar or the ones that match the same requirements (usually they are inconvenient and not commonly used). To resolve this problem, multiple conditions should be checked. When checking the waving gestures, the system fails if you wave very close to the camera. The reason is that the number of skin detected pixels is high in that case. So the constraint would be to keep a certain distance between the hand and the camera.
+
+The results that we got show that our method is successful when the gestures are explicit and when there is no background noise. As a potential improvement we could develop a better noise canceling system, such that no artificial background would be needed. Another way to improve our program could be determining gestures on both hands at the same time.
+
+## Conclusions
+
+Hand gesture recognition is a tough, however very exciting process. There are multiple approaches to solve one task and that’s what makes it interesting. We also found out that sometimes an easier method can work just as good as a complicated one. There is a lot of space for improvement and a lot of exciting applications that we could explore.
