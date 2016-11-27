@@ -40,6 +40,6 @@ For testing the hand gesture recognition and finger counting we looked at how ou
 ### Confusion Matrix for Thumbs Up
 
 || p | n |
-| ------------- |:-------------:| -----:|
-| Y      | 10 | 3 |
-| N      | 0      |   7 |
+| - |:-:| -:|
+| Y | 10 | 3 |
+| N | 0 | 7 |
